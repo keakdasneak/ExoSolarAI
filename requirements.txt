@@ -4,7 +4,6 @@ fastapi
 uvicorn
 pydantic
 scikit-learn
-warnings
 numpy
 matplotlib
 seaborn
