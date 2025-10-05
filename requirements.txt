@@ -3,3 +3,9 @@ pandas
 fastapi
 uvicorn
 pydantic
+scikit-learn
+sklearn
+warnings
+numpy
+matplotlib
+seaborn
