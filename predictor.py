@@ -1,20 +1,36 @@
 def main(input_values: dict):
     import joblib
     import pandas as pd
+    import numpy as np
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning)
+    warnings.filterwarnings("ignore", category=FutureWarning)
+
     # When predicting on new data
-    feature_cols = joblib.load("feature_cols.pkl")
+    # feature_cols = joblib.load("feature_cols.pkl")
     new_df = pd.DataFrame([input_values])
 
-    # Reindex to full feature set
-    new_df = new_df.reindex(columns=feature_cols)
+    # Add engineered features your model expects
+    new_df["log_orbper"] = np.log(new_df["pl_orbper"])
+    new_df["log_pradius"] = np.log(new_df["pl_rade"])
+    new_df["planet_star_radius_ratio"] = new_df["pl_radj"] / new_df["st_rad"]
+    new_df["stellar_luminosity_proxy"] = new_df["st_rad"]**2 * (new_df["st_teff"] / 5778)**4
 
-    # Load and predict
-    pipeline = joblib.load("exoplanet_model_v3.pkl")
+    # Load model and threshold
+    data = joblib.load("exoplanet_model_v3.pkl")
+    pipeline = data["model"]
     best_threshold = joblib.load("threshold.pkl")
+
+
+    # Reindex to full feature set
+    expected_cols = pipeline.feature_names_in_
+    new_df = new_df.reindex(columns=expected_cols)
+
 
     proba = pipeline.predict_proba(new_df)[:, 1][0]
     proba_percent = round(proba * 100, 2)
     prediction = int(proba >= best_threshold)
+    print(f"Probality: {proba_percent}%", f"Prediction (>= threshold): {prediction}")
     return f"Probality: {proba_percent}%", f"Prediction (>= threshold): {prediction}"
 
 if __name__ == "__main__":
